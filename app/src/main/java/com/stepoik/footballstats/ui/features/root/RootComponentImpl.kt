@@ -6,11 +6,13 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.arkivanov.decompose.router.stack.pushToFront
 import com.arkivanov.decompose.value.Value
 import com.stepoik.footballstats.core.BaseComponent
 import com.stepoik.footballstats.core.EmptyState
 import com.stepoik.footballstats.ui.features.details.GameDetailsComponent
 import com.stepoik.footballstats.ui.features.main.MainComponent
+import com.stepoik.footballstats.ui.features.search.SearchComponent
 import kotlinx.serialization.Serializable
 import org.koin.core.component.KoinComponent
 import org.koin.core.parameter.parameterSetOf
@@ -18,7 +20,8 @@ import org.koin.core.parameter.parameterSetOf
 class RootComponentImpl(
     componentContext: ComponentContext,
     private val homeComponentFactory: MainComponent.Factory,
-    private val detailFactory: GameDetailsComponent.Factory
+    private val detailFactory: GameDetailsComponent.Factory,
+    private val searchFactory: SearchComponent.Factory
 ) :
     BaseComponent<EmptyState>(componentContext, EmptyState.serializer()), RootComponent {
     override fun initialState() = EmptyState
@@ -33,6 +36,14 @@ class RootComponentImpl(
         childFactory = ::childFactory
     )
 
+    override fun onHomeClicked() {
+        navigation.pushToFront(Config.Home)
+    }
+
+    override fun onSearchClicked() {
+        navigation.pushToFront(Config.Search)
+    }
+
     private fun childFactory(config: Config, context: ComponentContext): RootComponent.Child {
         return when (config) {
             is Config.Home -> {
@@ -44,7 +55,11 @@ class RootComponentImpl(
             }
 
             is Config.Search -> {
-                RootComponent.Child.Search()
+                RootComponent.Child.Search(searchFactory.create(context, onGameSelected = {
+                    navigation.pushNew(
+                        Config.Details(it)
+                    )
+                }))
             }
 
             is Config.Account -> {

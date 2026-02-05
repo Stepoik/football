@@ -3,6 +3,7 @@ package com.stepoik.footballstats.ui.features.main
 import com.arkivanov.decompose.ComponentContext
 import com.stepoik.footballstats.core.BaseComponent
 import com.stepoik.footballstats.domain.GamesRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.parameter.parametersOf
@@ -25,10 +26,10 @@ class MainComponentImpl(
         if (state.isLoading) return
 
         updateState { it.copy(isLoading = true) }
-        componentScope.launch {
+        componentScope.launch(Dispatchers.Default) {
             gamesRepository.getGames(state.games.size).onSuccess { newGames ->
                 println(newGames)
-                updateState { it.copy(games = it.games + newGames, isLoading = false) }
+                updateState { it.copy(games = LinkedHashSet(it.games + newGames).toList(), isLoading = false) }
             }.onFailure {
                 println(it)
                 updateState { it.copy(isLoading = false) }

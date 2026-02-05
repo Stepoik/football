@@ -11,6 +11,8 @@ import com.stepoik.footballstats.ui.features.main.MainComponent
 import com.stepoik.footballstats.ui.features.main.MainComponentImpl
 import com.stepoik.footballstats.ui.features.root.RootComponent
 import com.stepoik.footballstats.ui.features.root.RootComponentImpl
+import com.stepoik.footballstats.ui.features.search.SearchComponent
+import com.stepoik.footballstats.ui.features.search.SearchComponentImpl
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -26,4 +28,7 @@ val rootModule = module {
 
     componentOf(::GameDetailsComponentImpl) bind GameDetailsComponent::class
     componentFactory<GameDetailsComponent.Factory> { GameDetailsComponentImpl.Factory() }
+
+    componentOf(::SearchComponentImpl) bind SearchComponent::class
+    componentFactory<SearchComponent.Factory> { SearchComponentImpl.Factory() }
 }

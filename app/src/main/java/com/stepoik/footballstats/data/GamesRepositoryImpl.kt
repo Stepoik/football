@@ -5,6 +5,7 @@ import com.stepoik.footballstats.data.dto.GetGameResponse
 import com.stepoik.footballstats.data.dto.GetLeaguesResponse
 import com.stepoik.footballstats.data.dto.GetMatchesResponse
 import com.stepoik.footballstats.data.dto.LeagueDto
+import com.stepoik.footballstats.data.dto.SearchResponse
 import com.stepoik.footballstats.domain.GamesRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -13,7 +14,10 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.Serializable
 import java.time.LocalDateTime
+import kotlin.String
+import kotlin.time.Instant
 
 private const val BASE_URL = "https://api.sstats.net/Games"
 
@@ -41,22 +45,22 @@ class GamesRepositoryImpl(
                 leagueId?.let {
                     append("LeagueId = $it ")
                 }
-                startDate?.let {
-                    if (leagueId != null) {
-                        append("And ")
-                    }
-                    append("LeagueId = $it ")
-                }
             }
             httpClient.post("$BASE_URL/query") {
                 setBody(
-                    mapOf(
-                        "condition" to condition,
-                        "Offset" to offset,
-                        "Limit" to 20
+                    SearchRequest(
+                        condition, offset, limit = 20, fields = listOf(
+                            "Id",
+                            "HomeTeamName",
+                            "AwayTeamName",
+                            "Date",
+                            "LeagueName",
+                            "CountryName",
+                            "Status"
+                        )
                     )
                 )
-            }.body<GetMatchesResponse>().data
+            }.body<SearchResponse>().data.map { it.toGame() }
         }
     }
 
@@ -73,3 +77,11 @@ class GamesRepositoryImpl(
     }
 
 }
+
+@Serializable
+data class SearchRequest(
+    val condition: String,
+    val offset: Int,
+    val limit: Int,
+    val fields: List<String>
+)

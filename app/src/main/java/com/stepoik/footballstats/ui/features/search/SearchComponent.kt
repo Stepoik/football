@@ -1,5 +1,6 @@
 package com.stepoik.footballstats.ui.features.search
 
+import com.arkivanov.decompose.ComponentContext
 import com.stepoik.footballstats.core.Component
 import com.stepoik.footballstats.data.dto.LeagueDto
 import kotlinx.datetime.LocalDate
@@ -15,6 +16,6 @@ interface SearchComponent : Component<SearchState> {
     fun onLoadNext()
 
     interface Factory {
-        fun create(onGameSelected: (Long) -> Unit): SearchComponent
+        fun create(componentContext: ComponentContext, onGameSelected: (Long) -> Unit): SearchComponent
     }
 }

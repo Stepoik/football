@@ -12,6 +12,10 @@ import com.stepoik.footballstats.ui.features.search.SearchComponent
 interface RootComponent : Component<EmptyState> {
     val stack: Value<ChildStack<*, Child>>
 
+    fun onHomeClicked()
+
+    fun onSearchClicked()
+
     sealed class Child {
         data class Home(val component: MainComponent) : Child()
         data class Search(val component: SearchComponent) : Child()

@@ -4,13 +4,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -49,20 +53,20 @@ fun SearchScreen(component: SearchComponent) {
     val state = component.state.subscribeAsState().value
     var datePickerState by remember { mutableStateOf<DatePickerState?>(null) }
     Surface {
-        Column {
+        Column(Modifier.padding(horizontal = 10.dp)) {
             Row {
                 Card(
                     modifier = Modifier.weight(1f),
                     onClick = { datePickerState = DatePickerState.START }) {
                     Box(Modifier.fillMaxWidth()) {
-                        Text(state.startDate.toString())
+                        Text(state.startDate?.toString() ?: "Выберите дату начала")
                     }
                 }
                 Card(
                     modifier = Modifier.weight(1f),
                     onClick = { datePickerState = DatePickerState.END }) {
                     Box(Modifier.fillMaxWidth()) {
-                        Text(state.endDate.toString())
+                        Text(state.endDate?.toString() ?: "Выберите дату конца")
                     }
                 }
             }
@@ -71,7 +75,7 @@ fun SearchScreen(component: SearchComponent) {
                 expanded = expanded,
                 onExpandedChange = {}
             ) {
-                Box(Modifier.fillMaxWidth()) {
+                Card(onClick = { expanded = true }, Modifier.fillMaxWidth()) {
                     Text(state.selectedLeagues?.name ?: "Выберите лигу")
                 }
                 ExposedDropdownMenu(
@@ -98,9 +102,12 @@ fun SearchScreen(component: SearchComponent) {
                     }
                 }
             }
-            LazyColumn {
+            LazyColumn(state = lazyState) {
                 items(state.games, key = { it.id }) {
-                    GameItem(it, onClick = { component.onGameSelected(it.id) })
+                    Column {
+                        GameItem(it, onClick = { component.onGameSelected(it.id) })
+                        Spacer(Modifier.height(10.dp))
+                    }
                 }
             }
         }
@@ -108,16 +115,23 @@ fun SearchScreen(component: SearchComponent) {
     if (datePickerState != null) {
         val datePickerCompState = rememberDatePickerState()
         DatePickerDialog(onDismissRequest = { datePickerState = null }, confirmButton = {
-            when (datePickerState) {
-                DatePickerState.START -> datePickerCompState.selectedDateMillis?.let {
-                    component.onSelectStartDate(it.toDate())
-                }
+            Button(
+                onClick =
+                    {
+                        when (datePickerState) {
+                            DatePickerState.START -> datePickerCompState.selectedDateMillis?.let {
+                                component.onSelectStartDate(it.toDate())
+                            }
 
-                DatePickerState.END -> datePickerCompState.selectedDateMillis?.let {
-                    component.onSelectEndDate(it.toDate())
-                }
+                            DatePickerState.END -> datePickerCompState.selectedDateMillis?.let {
+                                component.onSelectEndDate(it.toDate())
+                            }
 
-                else -> {}
+                            else -> {}
+                        }
+                        datePickerState = null
+                    }) {
+                Text("Confirm")
             }
         }) {
 

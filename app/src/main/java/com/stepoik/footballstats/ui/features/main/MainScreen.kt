@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,9 +21,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.stepoik.footballstats.data.dto.GameDto
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 private const val POSTS_PAGINATION_THRESHOLD = 5
 
@@ -47,14 +52,17 @@ fun MainScreen(component: MainComponent) {
                 modifier = Modifier.padding(vertical = 10.dp)
             )
         }
-        LazyColumn {
+        LazyColumn(state = lazyState) {
             item {
                 Text("Popular Upcoming Matches", style = MaterialTheme.typography.titleLarge)
             }
             items(state.games, key = {
                 it.id
             }) {
-                GameItem(it, onClick = { component.onGameClicked(it.id) })
+                Column {
+                    GameItem(it, onClick = { component.onGameClicked(it.id) })
+                    Spacer(Modifier.height(10.dp))
+                }
             }
         }
     }
@@ -62,19 +70,21 @@ fun MainScreen(component: MainComponent) {
 
 @Composable
 fun GameItem(game: GameDto, onClick: () -> Unit) {
-    Card(onClick = onClick) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(game.season.league.country.name)
-            Text(game.date.toString())
-        }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-            Text(game.awayTeam.name)
-            Column {
-                Text(game.date.toString())
+    Card(onClick = onClick, modifier = Modifier.padding(horizontal = 10.dp)) {
+        Column(Modifier.padding(10.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(game.season.league.country.name)
+                Text(game.date?.toLocalDateTime(TimeZone.currentSystemDefault())?.date.toString())
             }
-            Text(game.homeTeam.name)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
+                Text(game.awayTeam.name, modifier = Modifier.weight(1f), textAlign = TextAlign.Start)
+                Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(game.date?.toLocalDateTime(TimeZone.currentSystemDefault())?.time.toString())
+                }
+                Text(game.homeTeam.name, modifier = Modifier.weight(1f), textAlign = TextAlign.End)
+            }
+            HorizontalDivider(Modifier.fillMaxWidth())
+            Text(game.season.league.name)
         }
-        HorizontalDivider(Modifier.fillMaxWidth())
-        Text(game.season.league.name)
     }
 }

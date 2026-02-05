@@ -5,6 +5,7 @@ import com.stepoik.footballstats.core.BaseComponent
 import com.stepoik.footballstats.data.dto.LeagueDto
 import com.stepoik.footballstats.domain.GamesRepository
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -49,9 +50,9 @@ class SearchComponentImpl(
         if (state.gamesLoading) return
 
         updateState { it.copy(gamesLoading = true) }
-        gamesJob = componentScope.launch {
+        gamesJob = componentScope.launch(Dispatchers.Default) {
             gamesRepository.searchGame(leagueId = state.selectedLeagues?.id, offset = state.games.size, startDate = state.startDate, endDate = state.endDate).onSuccess { newGames ->
-                updateState { it.copy(games = it.games + newGames, gamesLoading = false) }
+                updateState { it.copy(games = LinkedHashSet(it.games + newGames).toList(), gamesLoading = false) }
             }.onFailure {
                 if (it !is CancellationException) {
                     updateState { it.copy(gamesLoading = false) }
@@ -77,15 +78,18 @@ class SearchComponentImpl(
 
     private fun loadLeagues() {
         componentScope.launch {
-            gamesRepository.getLeagues().onSuccess { leagueDtos ->
-                updateState { it.copy(availableLeagues = leagueDtos) }
+            for (i in 0..3) {
+                gamesRepository.getLeagues().onSuccess { leagueDtos ->
+                    updateState { it.copy(availableLeagues = leagueDtos) }
+                    break
+                }
             }
         }
     }
 
     class Factory : SearchComponent.Factory, KoinComponent {
-        override fun create(onGameSelected: (Long) -> Unit): SearchComponent {
-            return getKoin().get { parametersOf(onGameSelected) }
+        override fun create(componentContext: ComponentContext, onGameSelected: (Long) -> Unit): SearchComponent {
+            return getKoin().get { parametersOf(componentContext, onGameSelected) }
         }
     }
 }
